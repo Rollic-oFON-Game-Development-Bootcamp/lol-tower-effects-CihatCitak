@@ -44,6 +44,13 @@ public class Minion : MonoBehaviour
         return IsDead;
     }
 
+    public bool IsMinionWillDie(int damage = 1)
+    {
+        if ((currentHealth - damage) <= 0)
+            return true;
+        return false;
+    }
+
     private void Die()
     {
         Destroy(gameObject);

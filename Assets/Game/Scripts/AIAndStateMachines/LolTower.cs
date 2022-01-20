@@ -13,7 +13,9 @@ public enum TowerStates
 
 public class LolTower : MonoBehaviour
 {
+    [SerializeField] private int damage;
     [SerializeField] private Transform towerTop;
+    [SerializeField] private LolTowerAttacker lolTowerAttackerPrefab;
 
     [ReadOnly] public TowerStates currentState;
 
@@ -43,7 +45,7 @@ public class LolTower : MonoBehaviour
             Gizmos.DrawLine(towerTop.position, currentTargetPlayer.transform.position);
         }
 
-        Gizmos.color = col;
+        //Gizmos.color = col;
     }
 
     // Start is called before the first frame update
@@ -94,7 +96,7 @@ public class LolTower : MonoBehaviour
 
             var minions = results.Where(o => o.CompareTag("Minion"))
                 .Select(o => o.attachedRigidbody.GetComponent<Minion>());
-            
+
             if (minions.Any(o => !o.IsDead))
             {
                 var minion = minions.First(o => !o.IsDead);
@@ -125,12 +127,16 @@ public class LolTower : MonoBehaviour
 
             if (timer >= attackCooldown)
             {
-                if (currentTargetMinion.GetHit())
+                //Start Attack
+                StartAttack(currentTargetMinion);
+
+                if (currentTargetMinion.IsMinionWillDie(damage))
                 {
                     currentTargetMinion = null;
                     currentState = TowerStates.SeekTarget;
                     continue;
                 }
+
                 timer -= attackCooldown;
             }
 
@@ -161,12 +167,13 @@ public class LolTower : MonoBehaviour
 
             if (timer >= attackCooldown)
             {
-                if (currentTargetPlayer.GetHit())
+                if (currentTargetPlayer.GetHit() && currentTargetPlayer != null)
                 {
                     currentTargetPlayer = null;
                     currentState = TowerStates.SeekTarget;
                     continue;
                 }
+
                 timer -= attackCooldown;
             }
 
@@ -184,6 +191,13 @@ public class LolTower : MonoBehaviour
 
     }
 
+    private void StartAttack(Minion targetMinion)
+    {
+        var attacker = Instantiate(lolTowerAttackerPrefab, towerTop.position, Quaternion.identity);
+
+        attacker.AttackSetup(targetMinion, damage);
+    }
+
     public void Complain(TeamPlayer teamPlayer)
     {
         if (currentState == TowerStates.AttackMinion)
@@ -193,4 +207,5 @@ public class LolTower : MonoBehaviour
             currentState = TowerStates.AttackEnemy;
         }
     }
+
 }
